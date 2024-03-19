@@ -22,19 +22,19 @@ void displayMenu()
         << "=======================\n";
 }
 
-void printError(const string& error)
+void PrintError(const string& error)
 {
     cout << error << endl;
 }
 
-void printMissingParameterError(const string& parameter)
+void PrintMissingParameterError(const string& parameter)
 {
-    printError("Missing parameter. Enter " + parameter + ".");
+    PrintError("Missing parameter. Enter " + parameter + ".");
 }
 
-void printInvalidParameterError(const string& parameter)
+void PrintInvalidParameterError(const string& parameter)
 {
-    printError("Invalid " + parameter + ".");
+    PrintError("Invalid " + parameter + ".");
 }
 
 void processCommand(CTVSet& tv, const string& command)
@@ -44,7 +44,7 @@ void processCommand(CTVSet& tv, const string& command)
     iss >> cmd >> param1 >> param2;
 
     if (cmd.empty()) {
-        printError("Invalid command. Type 'help' for the list of commands.");
+        PrintError("Invalid command. Type 'help' for the list of commands.");
         return;
     }
 
@@ -60,13 +60,13 @@ void processCommand(CTVSet& tv, const string& command)
     {
         if (param1.empty())
         {
-            printMissingParameterError("channel number");
+            PrintMissingParameterError("channel number");
             return;
         }
         int channel;
         if (!(istringstream(param1) >> channel))
         {
-            printInvalidParameterError("channel number");
+            PrintInvalidParameterError("channel number");
             return;
         }
         tv.SelectChannel(channel);
@@ -75,7 +75,7 @@ void processCommand(CTVSet& tv, const string& command)
     {
         if (param1.empty())
         {
-            printMissingParameterError("channel name");
+            PrintMissingParameterError("channel name");
             return;
         }
         tv.SelectChannelByName(param1);
@@ -88,13 +88,13 @@ void processCommand(CTVSet& tv, const string& command)
     {
         if (param1.empty() || param2.empty())
         {
-            printMissingParameterError("channel number and name.");
+            PrintMissingParameterError("channel number and name.");
             return;
         }
         int channel;
         if (!(istringstream(param1) >> channel))
         {
-            printInvalidParameterError("channel number");
+            PrintInvalidParameterError("channel number");
             return;
         }
         tv.SetChannelName(channel, param2);
@@ -103,13 +103,13 @@ void processCommand(CTVSet& tv, const string& command)
     {
         if (param1.empty())
         {
-            printMissingParameterError("channel number");
+            PrintMissingParameterError("channel number");
             return;
         }
         int channel;
         if (!(istringstream(param1) >> channel))
         {
-            printInvalidParameterError("channel number");
+            PrintInvalidParameterError("channel number");
             return;
         }
         string channelName = tv.GetChannelName(channel);
@@ -126,7 +126,7 @@ void processCommand(CTVSet& tv, const string& command)
     {
         if (param1.empty())
         {
-            printMissingParameterError("channel name");
+            PrintMissingParameterError("channel name");
             return;
         }
         int channelNumber = tv.GetChannelByName(param1);
@@ -143,7 +143,7 @@ void processCommand(CTVSet& tv, const string& command)
     {
         if (param1.empty())
         {
-            printMissingParameterError("channel name");
+            PrintMissingParameterError("channel name");
             return;
         }
         tv.DeleteChannelName(param1);
@@ -163,7 +163,7 @@ void processCommand(CTVSet& tv, const string& command)
     }
     else
     {
-        printError("Invalid command. Type 'help' or '0' for the list of commands.");
+        PrintError("Invalid command. Type 'help' or '0' for the list of commands.");
     }
 }
 

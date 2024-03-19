@@ -9,12 +9,6 @@ using namespace std;
 
 class CTVSet
 {
-
-private:
-    bool m_isOn;
-    int m_currentChannel;
-    int m_previousChannel;
-    map<int, string> m_channelNames;
 public:
     CTVSet();
     void TurnOn();
@@ -27,6 +21,12 @@ public:
     int GetChannelByName(const string& name) const;
     void DeleteChannelName(const string& name);
     void Info();
+
+private:
+    bool m_isOn;
+    int m_currentChannel;
+    int m_previousChannel;
+    map<int, string> m_channelNames;
 };
 
 #endif

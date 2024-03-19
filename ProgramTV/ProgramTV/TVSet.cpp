@@ -66,6 +66,7 @@ void CTVSet::SelectChannelByName(const string& name)
     {
         if (i->second == name)
         {
+            m_previousChannel = m_currentChannel;
             m_currentChannel = i->first;
             cout << "Channel " << i->first << ", has been selected.\n";
             return;
