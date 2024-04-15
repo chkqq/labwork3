@@ -1,88 +1,49 @@
 #include "calculator.h"
 
+using namespace std;
+
 Calculator::Calculator() {
-    vars_["pi"] = 3.14159265;
-    vars_["e"] = 2.71828182;
+    m_vars["pi"] = 3.14159265;
+    m_vars["e"] = 2.71828182;
 }
 
-void PrintMenu()
+bool IsValidIdentifier(const string& identifier) 
 {
-    cout << "Available commands:" << endl
-         << "var <identifier>: Declare a variable." << endl
-         << "let <identifier1> = <identifier2>: Assign a value to a variable." << endl
-         << "fn <identifier> = <identifier1> <operation> <identifier2>: Declare a function." << endl
-         << "print <identifier>: Print the value of a variable or a function." << endl
-         << "printvars: Print all variables." << endl
-         << "printfns: Print all functions." << endl
-         << "exit: Exit the program." << endl;
-}
+    if (identifier.empty() || isdigit(identifier[0])) 
+    {
 
-bool Calculator::ExecuteCommand()
-{
-    string command;
-    cin >> command;
-
-    if (command == "var") 
-    {
-        string identifier;
-        cin >> identifier;
-        Var(identifier);
-    }
-    else if (command == "let") 
-    {
-        string input;
-        cin >> input;
-        Let(input);
-    }
-    else if (command == "fn") 
-    {
-        string input;
-        cin >> input;
-        Fn(input);
-    }
-    else if (command == "print") 
-    {
-        string identifier;
-        cin >> identifier;
-        Print(identifier);
-    }
-    else if (command == "printvars") 
-    {
-        PrintVars();
-    }
-    else if (command == "printfns")
-    {
-        PrintFns();
-    }
-    else if (command == "exit") 
-    {
+        cout << "Error: Invalid identifier. Identifiers cannot be empty, start with a digit." << endl;
         return false;
     }
-    else if (command == "help") 
+
+    for (char ch : identifier) 
     {
-        PrintMenu();
-    }
-    else
-    {
-        cout << "Error: Unknown command. Type 'help' for available commands." << endl;
+        if (!isalnum(ch) && ch != '_')
+        {
+
+            cout << "Error: Invalid identifier. Identifiers can only contain alphanumeric characters." << endl;
+            return false;
+        }
     }
 
     return true;
 }
 
-void Calculator::Var(const string& identifier) 
+void Calculator::AddVar(const string& identifier) 
 {
-    if (vars_.find(identifier) == vars_.end() && fns_.find(identifier) == fns_.end())
+    if (!IsValidIdentifier(identifier)) 
+        return;
+    if (m_vars.find(identifier) == m_vars.end() && m_fns.find(identifier) == m_fns.end())
     {
-        vars_[identifier] = NAN;
+        m_vars[identifier] = NAN;
     }
     else
     {
-        cout << "Error: Identifier already exists." << endl;
+        cout << "Error: Identifier "<< identifier <<" already exists." << endl;
     }
 }
 
-void Calculator::Let(const string& input) 
+void Calculator::Let(const string& input)   
 {
     string identifier, value;
     size_t eq_pos = input.find('=');
@@ -90,16 +51,18 @@ void Calculator::Let(const string& input)
     if (eq_pos != string::npos) 
     {
         identifier = input.substr(0, eq_pos);
+        if (!IsValidIdentifier(identifier))
+            return;
         value = input.substr(eq_pos + 1);
 
         try 
         {
-            double val = std::stod(value);
-            vars_[identifier] = val;
+            double val = stod(value);
+            m_vars[identifier] = val;
         }
         catch (...) 
         {
-            cout << "Error: Invalid value." << endl;
+            cout << "Error: Invalid value:" << value << endl;
         }
     }
     else 
@@ -108,56 +71,67 @@ void Calculator::Let(const string& input)
     }
 }
 
-void Calculator::Fn(const string& input) 
+void Calculator::AddFn(const std::string& input)
 {
-    string identifier, identifier1, operation, identifier2;
+    std::string identifier, identifier1, action, identifier2;
     size_t eq_pos = input.find('=');
 
-    if (eq_pos != string::npos)
+    if (eq_pos != std::string::npos)
     {
         identifier = input.substr(0, eq_pos);
-        string expr = input.substr(eq_pos + 1);
+        if (!IsValidIdentifier(identifier))
+            return;
+        if (m_fns.find(identifier) != m_fns.end())
+        {
+            std::cout << "Error: Function with identifier " << identifier << " already exists." << std::endl;
+            return;
+        }
+        std::string expr = input.substr(eq_pos + 1);
 
         size_t op_pos = expr.find_first_of("+-*/");
 
-        if (op_pos != string::npos)
+        if (op_pos != std::string::npos)
         {
             identifier1 = expr.substr(0, op_pos);
-            operation = expr[op_pos];
+            if (!IsValidIdentifier(identifier1))
+                return;
+            action = expr[op_pos];
             identifier2 = expr.substr(op_pos + 1);
-            fns_[identifier] = make_pair(identifier1, make_pair(operation.empty() ? ' ' : operation[0], identifier2));
+            if (!IsValidIdentifier(identifier2))
+                return;
+            m_fns[identifier] = { identifier1, action, identifier2, FnType::Operation };
         }
-        else 
+        else
         {
             identifier1 = expr;
-            fns_[identifier] = make_pair(identifier1, make_pair(' ', ""));
+            m_fns[identifier] = { identifier1, "", "", FnType::Identifier };
         }
     }
-    else 
+    else
     {
-        cout << "Error: Invalid syntax. Use '=' to define function." << endl;
+        std::cout << "Error: Invalid syntax. Use '=' to define function." << std::endl;
     }
 }
 
 
-double Calculator::Eval(const string& identifier)
+double Calculator::Eval(const std::string& identifier)
 {
-    if (vars_.find(identifier) != vars_.end())
+    if (m_vars.find(identifier) != m_vars.end())
     {
-        return vars_[identifier];
+        return m_vars[identifier];
     }
-    else if (fns_.find(identifier) != fns_.end())
+    else if (m_fns.find(identifier) != m_fns.end())
     {
-        auto fn_def = fns_[identifier];
-        if (fn_def.second.first == ' ') 
+        auto fn_def = m_fns[identifier];
+        if (fn_def.fnType == FnType::Identifier)
         {
-            return Eval(fn_def.first);
+            return Eval(fn_def.identifier1);
         }
         else
         {
-            double arg1 = Eval(fn_def.first);
-            double arg2 = Eval(fn_def.second.second);
-            switch (fn_def.second.first)
+            double arg1 = Eval(fn_def.identifier1);
+            double arg2 = Eval(fn_def.identifier2);
+            switch (fn_def.action[0])
             {
             case '+':
                 return arg1 + arg2;
@@ -166,11 +140,11 @@ double Calculator::Eval(const string& identifier)
             case '*':
                 return arg1 * arg2;
             case '/':
-                if (arg2 != 0) 
+                if (arg2 != 0)
                 {
                     return arg1 / arg2;
                 }
-                else 
+                else
                 {
                     return NAN;
                 }
@@ -181,39 +155,7 @@ double Calculator::Eval(const string& identifier)
     }
     else
     {
-        cout << "Error: Identifier not found." << endl;
+        std::cout << "Error: Identifier " << identifier << " not found." << std::endl;
         return NAN;
-    }
-}
-
-void Calculator::Print(const string& identifier) 
-{
-    if (vars_.find(identifier) != vars_.end()) 
-    {
-        cout << fixed << setprecision(2) << vars_[identifier] << endl;
-    }
-    else if (fns_.find(identifier) != fns_.end()) 
-    {
-        cout << fixed << setprecision(2) << Eval(identifier) << endl;
-    }
-    else 
-    {
-        cout << "Error: Identifier not found." << endl;
-    }
-}
-
-void Calculator::PrintVars()
-{
-    for (const auto& pair : vars_) 
-    {
-        cout << pair.first << ":" << fixed << setprecision(2) << pair.second << endl;
-    }
-}
-
-void Calculator::PrintFns()
-{
-    for (const auto& pair : fns_) 
-    {
-        cout << pair.first << ":" << std::fixed << setprecision(2) << Eval(pair.first) << endl;
     }
 }
